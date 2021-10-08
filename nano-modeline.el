@@ -5,7 +5,7 @@
 ;; Maintainer: Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 ;; URL: https://github.com/rougier/nano-modeline
 ;; Version: 0.2
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "27.1") (memoize "1.1"))
 ;; Keywords: convenience, mode-line, header-line
 
 ;; This file is not part of GNU Emacs.
@@ -53,6 +53,7 @@
 ;; Version 0.1
 ;; - Submission to ELPA
 ;;
+(require 'memoize)
 
 ;;; Code:
 (defgroup nano nil
@@ -197,6 +198,29 @@ Modeline is composed as:
       (setq output (concat "…/" output)))
     output))
 
+(defmemoize nano-modeline-buffer-file-name (file-name)
+  (let ((project-root (and (fboundp 'projectile-project-root)
+                               (projectile-project-root))))
+        (if project-root
+            (file-relative-name file-name project-root)
+          (abbreviate-file-name file-name))))
+
+(defun nano-modeline-buffer-name ()
+  (if buffer-file-name
+      (nano-modeline-buffer-file-name buffer-file-name)
+    (format-mode-line "%b")))
+
+(defun nano-modeline-project ()
+  "Current project"
+  (let ((name (projectile-project-name))
+        (max-length 32))
+    (concat "["
+            (if (> (length name) max-length)
+                (concat
+                 (substring name 0 (- max-length 1))
+                 "…")
+              name)
+            "]")))
 
 (defun nano-modeline-compose (status name primary secondary)
   "Compose a string with provided information"
@@ -621,17 +645,13 @@ depending on the version of mu4e."
   (derived-mode-p 'text-mode))
 
 (defun nano-modeline-default-mode ()
-    (let ((buffer-name (format-mode-line "%b"))
-          (mode-name   (nano-modeline-mode-name))
-          (branch      (nano-modeline-vc-branch))
-          (position    (format-mode-line "%l:%c")))
-      (nano-modeline-compose (nano-modeline-status)
-                             buffer-name
-                             (concat "(" mode-name
-                                     (if branch (concat ", "
-                                            (propertize branch 'face 'italic)))
-                                     ")" )
-                             position)))
+  (let ((buffer-name (nano-modeline-buffer-name))
+        (position (format-mode-line "%l:%c"))
+        (project (nano-modeline-project)))
+    (nano-modeline-compose (nano-modeline-status)
+                           buffer-name
+                           project
+                           position)))
 
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-status ()

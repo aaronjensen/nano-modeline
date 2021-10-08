@@ -233,19 +233,20 @@ Modeline is composed as:
                             'display `(raise ,space-down))
                 (propertize primary 'face (if active 'nano-modeline-active-primary
                                             'nano-modeline-inactive-primary))))
-         (right (concat secondary " "))
-         
-         (available-width (- (window-total-width) 
-                             (length prefix) (length left) (length right)
-                             (/ (window-right-divider-width) char-width)))
-     (available-width (max 1 available-width)))
-    (concat prefix
-            left
-            (propertize (make-string available-width ?\ )
-                        'face (if active 'nano-modeline-active
-                                'nano-modeline-inactive))
-            (propertize right 'face (if active 'nano-modeline-active-secondary
-                                      'nano-modeline-inactive-secondary)))))
+         (right (concat secondary " ")))
+    (concat
+     (propertize " " 'display '(space :width (8)))
+     prefix
+     left
+     (propertize " "
+                 'face (if active 'nano-modeline-active
+                         'nano-modeline-inactive)
+                 'display `(space :align-to
+                                  (- (+ right right-fringe right-margin)
+                                     ,(length right)
+                                     (8))))
+     (propertize right 'face (if active 'nano-modeline-active-secondary
+                               'nano-modeline-inactive-secondary)))))
 
 
 ;; ---------------------------------------------------------------------

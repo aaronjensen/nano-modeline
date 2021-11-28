@@ -224,18 +224,18 @@ Modeline is composed as:
 
 (defun nano-modeline-compose (status name primary secondary)
   "Compose a string with provided information"
-  (let* ((char-width    (window-font-width nil 'header-line))
-         (window        (get-buffer-window (current-buffer)))
-         (active        (eq window nano-modeline--selected-window))
-         (space-up       +0.20)
-         (space-down     -0.25)
+  (let* ((char-width (window-font-width nil 'header-line))
+         (window (get-buffer-window (current-buffer)))
+         (active (eq window nano-modeline--selected-window))
+         (space-up 0.2)
+         (space-down -0.25)
          (prefix (cond ((string= status "RO")
-                        (propertize (if (window-dedicated-p)"•RO " " RO ")
+                        (propertize (if (window-dedicated-p) "•RO " " RO ")
                                     'face (if active
                                               'nano-modeline-active-status-RO
                                             'nano-modeline-inactive-status-RO)))
                        ((string= status "**")
-                        (propertize (if (window-dedicated-p)"•** " " ** ")
+                        (propertize (if (window-dedicated-p) "•** " " ** ")
                                     'face (if active
                                               'nano-modeline-active-status-**
                                             'nano-modeline-inactive-status-**)))
@@ -247,19 +247,19 @@ Modeline is composed as:
                                       'face (if active 'nano-modeline-active-status-**
                                               'nano-modeline-inactive-status-**)))))
          (left (concat
-                (propertize " "  'face (if active 'nano-modeline-active
-                                         'nano-modeline-inactive)
+                (propertize " " 'face (if active 'nano-modeline-active
+                                        'nano-modeline-inactive)
                             'display `(raise ,space-up))
                 (propertize name 'face (if active 'nano-modeline-active-name
                                          'nano-modeline-inactive-name))
-                (propertize " "  'face (if active 'nano-modeline-active
-                                         'nano-modeline-inactive)
+                (propertize " " 'face (if active 'nano-modeline-active
+                                        'nano-modeline-inactive)
                             'display `(raise ,space-down))
                 (propertize primary 'face (if active 'nano-modeline-active-primary
                                             'nano-modeline-inactive-primary))))
          (right (concat secondary " ")))
     (concat
-     (propertize " " 'display '(space :width (8)))
+     (propertize " " 'face 'default 'display '(space :width (8)))
      prefix
      left
      (propertize " "
@@ -270,7 +270,8 @@ Modeline is composed as:
                                      ,(length right)
                                      (8))))
      (propertize right 'face (if active 'nano-modeline-active-secondary
-                               'nano-modeline-inactive-secondary)))))
+                               'nano-modeline-inactive-secondary))
+     (propertize " " 'face 'default 'display '(space :width (16))))))
 
 
 ;; ---------------------------------------------------------------------

@@ -711,7 +711,7 @@ depending on the version of mu4e."
               ((nano-modeline-calendar-mode-p)        (nano-modeline-calendar-mode))
               ((nano-modeline-org-capture-mode-p)     (nano-modeline-org-capture-mode))
               ((nano-modeline-org-agenda-mode-p)      (nano-modeline-org-agenda-mode))
-              ((nano-modeline-org-clock-mode-p)       (nano-modeline-org-clock-mode))
+              ;; ((nano-modeline-org-clock-mode-p)       (nano-modeline-org-clock-mode))
               ((nano-modeline-term-mode-p)            (nano-modeline-term-mode))
               ((nano-modeline-vterm-mode-p)           (nano-modeline-term-mode))
               ((nano-modeline-mu4e-dashboard-mode-p)  (nano-modeline-mu4e-dashboard-mode))

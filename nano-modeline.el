@@ -259,19 +259,25 @@ Modeline is composed as:
                                             'nano-modeline-inactive-primary))))
          (right (concat secondary " ")))
     (concat
-     (propertize " " 'face 'default 'display '(space :width (8)))
+     (when (display-graphic-p)
+       (propertize " " 'face 'default 'display '(space :width (8))))
      prefix
      left
      (propertize " "
                  'face (if active 'nano-modeline-active
                          'nano-modeline-inactive)
-                 'display `(space :align-to
-                                  (- (+ right right-fringe right-margin)
-                                     ,(length right)
-                                     (8))))
+                 'display (if (display-graphic-p)
+                              `(space :align-to
+                                      (- (+ right right-fringe right-margin)
+                                         ,(length right)
+                                         (8)))
+                            `(space :align-to
+                                    (- right
+                                       ,(length right)))))
      (propertize right 'face (if active 'nano-modeline-active-secondary
                                'nano-modeline-inactive-secondary))
-     (propertize " " 'face 'default 'display '(space :width (16))))))
+     (when (display-graphic-p)
+       (propertize " " 'face 'default 'display '(space :width (16)))))))
 
 
 ;; ---------------------------------------------------------------------

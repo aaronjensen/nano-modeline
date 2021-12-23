@@ -212,15 +212,17 @@ Modeline is composed as:
 
 (defun nano-modeline-project ()
   "Current project"
-  (let ((name (projectile-project-name))
-        (max-length 32))
-    (concat "["
-            (if (> (length name) max-length)
-                (concat
-                 (substring name 0 (- max-length 1))
-                 "…")
-              name)
-            "]")))
+  (if projectile-mode
+      (let ((name (projectile-project-name))
+            (max-length 32))
+        (concat "["
+                (if (> (length name) max-length)
+                    (concat
+                     (substring name 0 (- max-length 1))
+                     "…")
+                  name)
+                "]"))
+    ""))
 
 (defun nano-modeline-compose (status name primary secondary)
   "Compose a string with provided information"

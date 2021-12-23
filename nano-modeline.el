@@ -249,12 +249,12 @@ Modeline is composed as:
                                       'face (if active 'nano-modeline-active-status-**
                                               'nano-modeline-inactive-status-**)))))
          (left (concat
-                (propertize " " 'face (if active 'nano-modeline-active
+                (propertize "   " 'face (if active 'nano-modeline-active
                                         'nano-modeline-inactive)
                             'display `(raise ,space-up))
                 (propertize name 'face (if active 'nano-modeline-active-name
                                          'nano-modeline-inactive-name))
-                (propertize " " 'face (if active 'nano-modeline-active
+                (propertize "  " 'face (if active 'nano-modeline-active
                                         'nano-modeline-inactive)
                             'display `(raise ,space-down))
                 (propertize primary 'face (if active 'nano-modeline-active-primary

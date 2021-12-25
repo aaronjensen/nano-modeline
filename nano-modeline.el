@@ -258,6 +258,10 @@ Modeline is composed as:
                  name))
          (status (or status (nano-modeline-status)))
          (active (eq window nano-modeline--selected-window))
+         (prefix (or prefix
+                     (cond ((eq status 'read-only) "RO")
+                           ((eq status 'modified) "**")
+                           ((eq status 'read-write) "RW"))))
          (prefix-face (cond ((eq status 'read-only) (if active
                                                         'nano-modeline-active-status-RO
                                                       'nano-modeline-inactive-status-RO))
@@ -732,7 +736,7 @@ depending on the version of mu4e."
           (mode-name   (nano-modeline-mode-name))
           (position    (format-mode-line "%l:%c"))
           (project (nano-modeline-project)))
-      (nano-modeline-render mode-name
+      (nano-modeline-render nil
                             buffer-name
                             project
                             position)))

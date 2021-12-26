@@ -58,6 +58,9 @@
 ;; Version 0.1
 ;; - Submission to ELPA
 ;;
+(eval-when-compile
+  (require 'term))
+
 (require 'memoize)
 
 ;;; Code:

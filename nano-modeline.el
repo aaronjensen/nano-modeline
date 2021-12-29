@@ -208,17 +208,19 @@ Modeline is composed as:
       (setq output (concat "…/" output)))
     output))
 
-(defmemoize nano-modeline-buffer-file-name (file-name)
-  (let ((project-root (and (fboundp 'projectile-project-root)
-                               (projectile-project-root))))
-        (if project-root
-            (file-relative-name file-name project-root)
-          (abbreviate-file-name file-name))))
+(defmemoize nano-modeline-project-relative-name (file-name)
+  (when-let ((project-root (projectile-project-root)))
+    (file-relative-name file-name project-root)))
+
+(defun nano-modeline-buffer-file-name ()
+  (when buffer-file-name
+    (or (and (fboundp 'projectile-project-root)
+             (nano-modeline-project-relative-name buffer-file-name))
+        (abbreviate-file-name file-name))))
 
 (defun nano-modeline-buffer-name ()
-  (if buffer-file-name
-      (nano-modeline-buffer-file-name buffer-file-name)
-    (format-mode-line "%b")))
+  (or (nano-modeline-buffer-file-name)
+      (format-mode-line "%b")))
 
 (defun nano-modeline-project ()
   "Current project"

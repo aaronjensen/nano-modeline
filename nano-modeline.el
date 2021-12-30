@@ -216,7 +216,7 @@ Modeline is composed as:
   (when buffer-file-name
     (or (and (fboundp 'projectile-project-root)
              (nano-modeline-project-relative-name buffer-file-name))
-        (abbreviate-file-name file-name))))
+        (abbreviate-file-name buffer-file-name))))
 
 (defun nano-modeline-buffer-name ()
   (or (nano-modeline-buffer-file-name)

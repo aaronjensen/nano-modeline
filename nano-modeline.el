@@ -955,7 +955,7 @@ depending on the version of mu4e."
     (let ((buffer-name (nano-modeline-buffer-name))
           (mode-name   (nano-modeline-mode-name))
           (project     (nano-modeline-project))
-          (position    (format-mode-line "%l:%c")))
+          (position    (format-mode-line "%l:%2c")))
       (nano-modeline-render nil ;; (upcase  mode-name)
                             buffer-name
                             project

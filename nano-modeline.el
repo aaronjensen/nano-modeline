@@ -65,12 +65,13 @@
 ;; Version 0.1
 ;; - Submission to ELPA
 ;;
+
+;;; Code:
 (eval-when-compile
   (require 'term))
 
 (require 'memoize)
 
-;;; Code:
 (defgroup nano nil
   "N Λ N O"
   :group 'convenience)

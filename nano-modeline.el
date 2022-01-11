@@ -233,10 +233,10 @@ Negative is downwards."
                             :format nano-modeline-org-capture-mode
                             :on-activate nano-modeline-org-capture-activate
                             :on-inactivate nano-modeline-org-capture-inactivate)
-    (org-clock-mode         :mode-p nano-modeline-org-clock-mode-p
-                            :format nano-modeline-org-clock-mode
-                            :on-activate nano-modeline-org-clock-activate
-                            :on-inactivate nano-modeline-org-clock-inactivate)
+    ;; (org-clock-mode         :mode-p nano-modeline-org-clock-mode-p
+    ;;                         :format nano-modeline-org-clock-mode
+    ;;                         :on-activate nano-modeline-org-clock-activate
+    ;;                         :on-inactivate nano-modeline-org-clock-inactivate)
     (pdf-view-mode          :mode-p nano-modeline-pdf-view-mode-p
                             :format nano-modeline-pdf-view-mode)
     (prog-mode              :mode-p nano-modeline-prog-mode-p

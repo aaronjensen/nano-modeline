@@ -336,10 +336,13 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
   (when-let ((project-root (projectile-project-root)))
     (file-relative-name file-name project-root)))
 
+(defmemoize nano-modeline-project-name (file-name)
+  (projectile-project-name))
+
 (defun nano-modeline-buffer-file-name ()
   (when buffer-file-name
     (or (and (fboundp 'projectile-project-root)
-             (nano-modeline-project-relative-name buffer-file-name))
+             (nano-modeline-project-relative-name (substring-no-properties buffer-file-name)))
         (abbreviate-file-name buffer-file-name))))
 
 (defun nano-modeline-buffer-name ()
@@ -349,7 +352,9 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
 (defun nano-modeline-project ()
   "Current project"
   (if projectile-mode
-      (let ((name (projectile-project-name))
+      (let ((name (if buffer-file-name
+                      (nano-modeline-project-name (substring-no-properties buffer-file-name))
+                    (projectile-project-name)))
             (max-length 32))
         (concat "["
                 (if (> (length name) max-length)

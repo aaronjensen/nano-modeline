@@ -419,19 +419,19 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                                                 'nano-modeline-inactive-name))
                        (if (length name) " ")
                        (propertize primary 'face (if active 'nano-modeline-active-primary
-                                                   'nano-modeline-inactive-primary))))
-         (right (concat (propertize secondary 'face (if active 'nano-modeline-active-secondary
-                                                      'nano-modeline-inactive-secondary))
-                        (propertize " " 'display `(raise ,nano-modeline-space-bottom))))
-	 (right-len (length (format-mode-line right))))
+                                                   'nano-modeline-inactive-primary))
+                       (propertize " " 'display `(raise ,nano-modeline-space-bottom))))
+         (right (propertize (concat secondary " ") 'face (if active 'nano-modeline-active-secondary
+                                                           'nano-modeline-inactive-secondary)))
+	       (right-len (length (format-mode-line right))))
     (concat
      (when (display-graphic-p)
-       (propertize " " 'face 'default 'display '(space :width (8))))
-     left 
-     (propertize " " 'display `(space :align-to (- right ,(- right-len 0))))
+       (propertize " " 'face 'default 'display '(space :width left-fringe)))
+     left
+     (propertize " " 'display `(space :align-to (- right-fringe ,right-len)))
      right
      (when (display-graphic-p)
-       (propertize " " 'face 'default 'display '(space :width (16)))))))
+       (propertize " " 'face 'default 'display '(space :width (2 . right-fringe)))))))
 
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-ein-notebook-mode ()

@@ -47,6 +47,10 @@
 ;;
 ;;; NEWS:
 ;;
+;; Version 0.5.1
+;; - Bug fix (make-obsolete-variable)
+;; - Added marker for dedicated window
+;;
 ;; Version 0.5
 ;; - Dynamic version that is now configurable thanks to the wonderful
 ;;   contribution of Hans Donner (@hans-d)
@@ -412,9 +416,13 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                             (t (if active 'nano-modeline-active
                                  'nano-modeline-inactive))))
          (left (concat (if (stringp prefix)
-                           (propertize (format " %s " prefix)
-                                       'face `(:inherit ,prefix-face)))
-                       (propertize " " 'display `(raise ,nano-modeline-space-top))
+                           (concat
+                            (propertize (if (window-dedicated-p) "•" " ")
+                                        'face `(:inherit ,prefix-face))
+                            (propertize (format "%s" prefix)
+                                        'face `(:inherit ,prefix-face))
+                            (propertize " " 'face `(:inherit ,prefix-face))))
+                         (propertize " " 'display `(raise ,nano-modeline-space-top))
                        (propertize name 'face (if active 'nano-modeline-active-name
                                                 'nano-modeline-inactive-name))
                        (if (length name) " ")
@@ -474,7 +482,7 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                         (update
                          (let ((total (elfeed-queue-count-total))
                                (in-process (elfeed-queue-count-active)))
-                           (format "%d jobs pending, %d active..."
+                           (format "%d jobs pending, %d active"
                                    (- total in-process) in-process)))
                         (t  (let* ((db-time (seconds-to-time (elfeed-db-last-update)))
                                    (unread ))
@@ -957,14 +965,14 @@ depending on the version of mu4e."
   (nano-modeline-default-mode))
 
 (defun nano-modeline-default-mode ()
-    (let ((buffer-name (nano-modeline-buffer-name))
-          (mode-name   (nano-modeline-mode-name))
-          (project     (nano-modeline-project))
-          (position    (format-mode-line "%l:%2c")))
-      (nano-modeline-render nil ;; (upcase  mode-name)
-                            buffer-name
-                            project
-                            position)))
+  (let ((buffer-name (nano-modeline-buffer-name))
+        (mode-name   (nano-modeline-mode-name))
+        (project     (nano-modeline-project))
+        (position    (format-mode-line "%l:%2c")))
+    (nano-modeline-render nil ;; (upcase  mode-name)
+                          buffer-name
+                          project
+                          position)))
 
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-face-clear (face)
@@ -1006,6 +1014,7 @@ depending on the version of mu4e."
       (progn
         (setq mode-line-format format)
         (setq-default mode-line-format format)))))
+
 
 (defun nano-modeline-update-windows ()
   "Hide the mode line depending on the presence of a window

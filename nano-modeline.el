@@ -429,13 +429,9 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                                                            'nano-modeline-inactive-secondary)))
 	       (right-len (length (format-mode-line right))))
     (concat
-     (when (display-graphic-p)
-       (propertize " " 'face 'default 'display '(space :width left-fringe)))
      left
      (propertize " " 'display `(space :align-to (- right-fringe ,right-len)))
-     right
-     (when (display-graphic-p)
-       (propertize " " 'face 'default 'display '(space :width (2 . right-fringe)))))))
+     right)))
 
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-ein-notebook-mode ()

@@ -483,18 +483,17 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                      ;; When do we add space on the left?
                      (if nano-modeline-prefix-padding
                          (propertize " " 'face face-modeline))))
-                (if (length name)
-                    (concat
-                     (when (eq status 'modified)
-                       (propertize "⬤" 'face face-primary))
-                     (propertize " " 'face face-modeline
-                                 'display '(space :align-to (+ left (13))))))
                 (propertize name 'face face-name)
                 (if (length name)
-                    (propertize " " 'face face-modeline))
-                (propertize primary 'face face-primary)))
-         (right (concat
-                 (propertize secondary 'face face-secondary)))
+                    (concat
+                     (if (eq status 'modified)
+                         (concat
+                          (propertize " " 'display '(space :width (3)))
+                          (propertize "⬤" 'face face-primary 'display '((raise 0.2) (height 0.6)))
+                          (propertize " " 'display '(space :width (8))))
+                       (propertize " " 'face face-modeline 'display '(space :width (16))))))
+                (propertize primary 'face face-primary 'display '(raise 0.1))))
+         (right (propertize secondary 'face face-secondary))
 	     (right-len (length (format-mode-line right))))
     (concat
      left

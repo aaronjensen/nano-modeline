@@ -441,8 +441,6 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                        'nano-modeline-inactive-secondary))
 
          (left (concat
-                (propertize " "  'face `(:inherit ,face-prefix)
-                                 'display `(raise ,nano-modeline-space-top))
                 (if prefix
                     (concat
                      (propertize prefix 'face face-prefix)
@@ -450,24 +448,23 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                      ;; When do we add space on the left?
                      (if nano-modeline-prefix-padding
                          (propertize " " 'face face-modeline))))
+                (if (length name)
+                    (concat
+                     (when (eq status 'modified)
+                       (propertize "⬤" 'face face-primary))
+                     (propertize " " 'face face-modeline
+                                 'display '(space :align-to (+ left (13))))))
                 (propertize name 'face face-name)
                 (if (length name)
                     (propertize " " 'face face-modeline))
-               (propertize primary 'face face-primary)))
+                (propertize primary 'face face-primary)))
          (right (concat
-                 (propertize secondary 'face face-secondary)
-                 (if (and (not (eq nano-modeline-prefix 'default))
-                          (eq status 'modified))
-                     (propertize " [M]" 'face face-secondary)
-                   (if (window-dedicated-p)
-                       (propertize " [•]" 'face face-secondary)))
-                 (propertize " "  'face `(:inherit ,face-modeline)
-                                  'display `(raise ,nano-modeline-space-bottom))))
+                 (propertize secondary 'face face-secondary)))
 	     (right-len (length (format-mode-line right))))
     (concat
      left 
      (propertize " "  'face face-secondary
-                      'display `(space :align-to (- right ,(- right-len 0))))
+                 'display `(space :align-to (- right ,right-len)))
      right)))
 
 

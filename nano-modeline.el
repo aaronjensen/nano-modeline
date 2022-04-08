@@ -5,7 +5,7 @@
 ;; Maintainer: Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 ;; URL: https://github.com/rougier/nano-modeline
 ;; Version: 0.6
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "27.1") (memoize "1.1"))
 ;; Keywords: convenience, mode-line, header-line
 
 ;; This file is not part of GNU Emacs.
@@ -83,6 +83,8 @@
 ;;; Code:
 (eval-when-compile
   (require 'term))
+
+(require 'memoize)
 
 (defgroup nano nil
   "N Λ N O"
@@ -291,11 +293,12 @@ This is useful (aesthetically) if the face of prefix uses a different background
                             :on-activate nano-modeline-org-capture-activate
                             :on-inactivate nano-modeline-org-capture-inactivate
                             :icon "") ;; nerd-font / oct-calendar
-    (org-clock-mode         :mode-p nano-modeline-org-clock-mode-p
-                            :format nano-modeline-org-clock-mode
-                            :on-activate nano-modeline-org-clock-activate
-                            :on-inactivate nano-modeline-org-clock-inactivate
-                            :icon "") ;; nerd-font / oct-clock
+    ;; (org-clock-mode         :mode-p nano-modeline-org-clock-mode-p
+    ;;                         :format nano-modeline-org-clock-mode
+    ;;                         :on-activate nano-modeline-org-clock-activate
+    ;;                         :on-inactivate nano-modeline-org-clock-inactivate
+    ;;                         :icon "")
+    ;; nerd-font / oct-clock
     (pdf-view-mode          :mode-p nano-modeline-pdf-view-mode-p
                             :format nano-modeline-pdf-view-mode
                             :icon "") ;; nerd-font/ oct-file-pdf
@@ -387,6 +390,38 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
       (setq output (concat "…/" output)))
     output))
 
+(defmemoize nano-modeline-project-relative-name (file-name)
+  (when-let ((project-root (projectile-project-root)))
+    (file-relative-name file-name project-root)))
+
+(defmemoize nano-modeline-project-name (file-name)
+  (projectile-project-name))
+
+(defun nano-modeline-buffer-file-name ()
+  (when buffer-file-name
+    (or (and (fboundp 'projectile-project-root)
+             (nano-modeline-project-relative-name (substring-no-properties buffer-file-name)))
+        (abbreviate-file-name buffer-file-name))))
+
+(defun nano-modeline-buffer-name ()
+  (or (nano-modeline-buffer-file-name)
+      (format-mode-line "%b")))
+
+(defun nano-modeline-project ()
+  "Current project"
+  (if projectile-mode
+      (let ((name (if buffer-file-name
+                      (nano-modeline-project-name (substring-no-properties buffer-file-name))
+                    (projectile-project-name)))
+            (max-length 32))
+        (concat "["
+                (if (> (length name) max-length)
+                    (concat
+                     (substring name 0 (- max-length 1))
+                     "…")
+                  name)
+                "]"))
+    ""))
 
 (defun nano-modeline-status ()
   "Return buffer status, one of 'read-only, 'modified or 'read-write."
@@ -462,9 +497,8 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                  (propertize secondary 'face face-secondary)))
 	     (right-len (length (format-mode-line right))))
     (concat
-     left 
-     (propertize " "  'face face-secondary
-                 'display `(space :align-to (- right ,right-len)))
+     left
+     (propertize " " 'display `(space :align-to (- right ,right-len)))
      right)))
 
 
@@ -996,13 +1030,13 @@ depending on the version of mu4e."
    (plist-get (cdr (assoc 'text-mode nano-modeline-mode-formats)) :icon)))
 
 (defun nano-modeline-default-mode (&optional icon)
-  (let ((buffer-name (format-mode-line "%b"))
+  (let ((buffer-name (nano-modeline-buffer-name))
         (mode-name   (nano-modeline-mode-name))
-        (branch      (nano-modeline-vc-branch))
+        (project     (nano-modeline-project))
         (position    (format-mode-line "%l:%c")))
     (nano-modeline-render icon
                           buffer-name
-                          (if branch (concat "(" branch ")") "")
+                          project
                           position)))
 
 

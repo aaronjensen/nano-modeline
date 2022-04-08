@@ -488,16 +488,16 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                     (concat
                      (if (eq status 'modified)
                          (concat
-                          (propertize " " 'display '(space :width (3)))
+                          (propertize " " 'face face-modeline 'display '(space :width (3)))
                           (propertize "⬤" 'face face-primary 'display '((raise 0.2) (height 0.6)))
-                          (propertize " " 'display '(space :width (8))))
+                          (propertize " " 'face face-modeline 'display '(space :width (8))))
                        (propertize " " 'face face-modeline 'display '(space :width (16))))))
                 (propertize primary 'face face-primary 'display '(raise 0.1))))
          (right (propertize secondary 'face face-secondary))
 	     (right-len (length (format-mode-line right))))
     (concat
      left
-     (propertize " " 'display `(space :align-to (- right ,right-len)))
+     (propertize " " 'face face-modeline 'display `(space :align-to (- right ,right-len)))
      right)))
 
 

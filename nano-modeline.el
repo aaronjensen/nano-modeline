@@ -244,7 +244,7 @@ This is useful (aesthetically) if the face of prefix uses a different background
                             :format nano-modeline-term-mode
                             :icon "") ;; nerd-font / oct-term
     (vterm-mode             :mode-p nano-modeline-vterm-mode-p
-                            :format nano-modeline-term-mode
+                            :format nano-modeline-vterm-mode
                             :icon "") ;; nerd-font / oct-term
     (buffer-menu-mode       :mode-p nano-modeline-buffer-menu-mode-p
                             :format nano-modeline-buffer-menu-mode
@@ -391,8 +391,9 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
     output))
 
 (defmemoize nano-modeline-project-relative-name (file-name)
-  (when-let ((project-root (projectile-project-root)))
-    (file-relative-name file-name project-root)))
+  (if-let ((project-root (projectile-project-root)))
+      (file-relative-name file-name project-root)
+    file-name))
 
 (defmemoize nano-modeline-project-name (file-name)
   (projectile-project-name))
@@ -727,6 +728,19 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                              "(char mode)"
                            "(line mode)")
                          (nano-modeline-shorten-directory default-directory 32)))
+
+(defun nano-modeline-vterm-mode ()
+  (let* ((buffer-name (format-mode-line "%b"))
+         (prefix (if (string-prefix-p "*vterm" buffer-name)
+                     "Terminal"
+                   buffer-name))
+         (directory (nano-modeline-project-relative-name (substring default-directory 0 -1)))
+         (directory (unless (string-equal directory ".") directory))
+         (separator (when directory " - ")))
+    (nano-modeline-render  (plist-get (cdr (assoc 'term-mode nano-modeline-mode-formats)) :icon)
+                           (concat prefix separator directory)
+                           (nano-modeline-project)
+                           " ")))
 
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-mu4e-last-query ()

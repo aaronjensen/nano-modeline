@@ -437,11 +437,12 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
   "Compose a string with provided information"
 
   (let* ((window (get-buffer-window (current-buffer)))
-         (name-max-width (- (window-body-width) 1
-                            (length primary)    5
-                            (length secondary)  1))
+         (name-max-width (max 12
+                              (- (window-body-width)
+                                 (round (* 0.8 (length primary)))
+                                 (length secondary))))
          (name (if (and (stringp name) (> (length name) name-max-width))
-                   (format "%s…" (substring name 0 (- name-max-width 1)))
+                   (format "…%s" (substring name (- (length name) name-max-width -1)))
                  name))
          (status (or status (nano-modeline-status)))
          (active (eq window nano-modeline--selected-window))

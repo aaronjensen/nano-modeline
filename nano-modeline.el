@@ -390,18 +390,24 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
       (setq output (concat "…/" output)))
     output))
 
+(defun nano-modeline-project-root ()
+    "Return the current project name or nil."
+    (when-let ((project (project-current)))
+      (project-root project)))
+
+(defun nano-modeline-project-name ()
+    "Return the current project name or nil."
+    (when-let ((project-root (nano-modeline-project-root)))
+      (file-name-nondirectory (directory-file-name project-root))))
+
 (defmemoize nano-modeline-project-relative-name (file-name)
-  (if-let ((project-root (projectile-project-root)))
+  (if-let ((project-root (nano-modeline-project-root)))
       (file-relative-name file-name project-root)
     file-name))
 
-(defmemoize nano-modeline-project-name (file-name)
-  (projectile-project-name))
-
 (defun nano-modeline-buffer-file-name ()
   (when buffer-file-name
-    (or (and (fboundp 'projectile-project-root)
-             (nano-modeline-project-relative-name (substring-no-properties buffer-file-name)))
+    (or (nano-modeline-project-relative-name (substring-no-properties buffer-file-name))
         (abbreviate-file-name buffer-file-name))))
 
 (defun nano-modeline-buffer-name ()
@@ -410,19 +416,17 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
 
 (defun nano-modeline-project ()
   "Current project"
-  (if projectile-mode
-      (let ((name (if buffer-file-name
-                      (nano-modeline-project-name (substring-no-properties buffer-file-name))
-                    (projectile-project-name)))
-            (max-length 32))
+  (let ((name (nano-modeline-project-name))
+        (max-length 32))
+    (if name
         (concat "["
                 (if (> (length name) max-length)
                     (concat
                      (substring name 0 (- max-length 1))
                      "…")
                   name)
-                "]"))
-    ""))
+                "]")
+      "")))
 
 (defun nano-modeline-status ()
   "Return buffer status, one of 'read-only, 'modified or 'read-write."

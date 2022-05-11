@@ -489,6 +489,7 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
                      ;; When do we add space on the left?
                      (if nano-modeline-prefix-padding
                          (propertize " " 'face face-modeline))))
+                (if (window-dedicated-p) (propertize "🖈 " 'face face-secondary 'display '(height 0.9)))
                 (propertize name 'face face-name)
                 (if (length name)
                     (concat

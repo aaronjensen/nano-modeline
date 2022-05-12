@@ -4,7 +4,7 @@
 
 ;; Maintainer: Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 ;; URL: https://github.com/rougier/nano-modeline
-;; Version: 0.6
+;; Version: 0.7
 ;; Package-Requires: ((emacs "27.1") (memoize "1.1"))
 ;; Keywords: convenience, mode-line, header-line
 
@@ -49,7 +49,12 @@
 ;;; NEWS:
 ;;
 ;; Version 0.7
-;; - Removed prefix on the left (not too much informative)
+;; - Prefix is now an option (none, status or icon)
+;; - Prefix can be replaced by icons
+;; - Better space computation
+;; - New imenu-list mode
+;; - Indirect buffers are now handled properly
+;; - Bugfix in org-clock-mode
 ;;
 ;; Version 0.6
 ;; - Spaces have face that enforce active/inactive
@@ -130,7 +135,7 @@ Negative is downwards."
 (defcustom nano-modeline-prefix 'default
   "Type of prefix on the left"
   :type '(choice (const :tag "None" none)
-                 (const :tag "Default (RO/RW/**)" default)
+                 (const :tag "Status (RO/RW/**)" status)
                  (const :tag "Icon" icon))
   :group 'nano-modeline)
 
@@ -213,6 +218,10 @@ This is useful (aesthetically) if the face of prefix uses a different background
 
 (defcustom nano-modeline-mode-formats
   '(;; with :mode-p first
+
+    (imenu-list-mode        :mode-p nano-modeline-imenu-list-mode-p
+                            :format nano-modeline-imenu-list-mode
+                            :icon "") ;; nerd-font / oct-three-bars
     (prog-mode              :mode-p nano-modeline-prog-mode-p
                             :format nano-modeline-prog-mode
                             :icon "") ;; nerd-font / oct-file-code
@@ -251,6 +260,7 @@ This is useful (aesthetically) if the face of prefix uses a different background
                             :on-activate nano-modeline-buffer-menu-activate
                             :on-inactivate nano-modeline-buffer-menu-inactivate
                             :icon "") ;; nerd-font / oct-three-bars
+
     (calendar-mode          :mode-p nano-modeline-calendar-mode-p
                             :format nano-modeline-calendar-mode
                             :on-activate nano-modeline-calendar-activate
@@ -320,10 +330,9 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
   :type '(alist :key-type symbol
                 :value-type (plist :key-type (choice (const :mode-p)
                                                      (const :format)
+                                                     (const :icon)
                                                      (const :on-activate)
-                                                     (const :on-inactivate))
-                                   :value-type sexp))
-;;                                     :value-type function))
+                                                     (const :on-inactivate))))
   :group 'nano-modeline)
 
 (defcustom nano-modeline-mode-format-activate-hook nil
@@ -431,11 +440,12 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
 (defun nano-modeline-status ()
   "Return buffer status, one of 'read-only, 'modified or 'read-write."
 
-  (let ((read-only   buffer-read-only)
-        (modified    (and buffer-file-name (buffer-modified-p))))
-    (cond (modified  'modified)
-          (read-only 'read-only)
-          (t         'read-write))))
+  (with-current-buffer (or (buffer-base-buffer) (current-buffer))
+    (let ((read-only   buffer-read-only)
+          (modified    (and buffer-file-name (buffer-modified-p))))
+      (cond (modified  'modified)
+            (read-only 'read-only)
+            (t         'read-write)))))
 
 (defun nano-modeline-render (icon name primary secondary &optional status)
   "Compose a string with provided information"
@@ -506,7 +516,6 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
      left
      (propertize " " 'face face-modeline 'display `(space :align-to (- right ,right-len)))
      right)))
-
 
 
 ;; ---------------------------------------------------------------------
@@ -592,7 +601,7 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
     (nano-modeline-render icon
                           title
                           ;;(nano-modeline-truncate title 40)
-                           (concat "(" tags-str ")")
+                           (concat "(" tags-str ")   ")
                            feed-title)))
 
 ;; ---------------------------------------------------------------------
@@ -883,7 +892,8 @@ depending on the version of mu4e."
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-org-clock-mode-p ()
   (and (boundp 'org-mode-line-string)
-       (stringp org-mode-line-string)))
+       (stringp org-mode-line-string)
+       (> (length org-mode-line-string) 0)))
 
 (defun nano-modeline-org-clock-mode ()
     (let ((buffer-name (format-mode-line "%b"))
@@ -893,8 +903,7 @@ depending on the version of mu4e."
       (nano-modeline-render (plist-get (cdr (assoc 'org-clock-mode nano-modeline-mode-formats)) :icon)
                              buffer-name 
                              (concat "(" mode-name
-                                     (if branch (concat ", "
-                                             (propertize branch 'face 'italic)))
+                                     (if branch (concat ", " branch))
                                      ")" )
                              org-mode-line-string)))
 
@@ -1015,6 +1024,22 @@ depending on the version of mu4e."
                             position)))
 
 ;; ---------------------------------------------------------------------
+(defun nano-modeline-imenu-list-mode-p ()
+  (derived-mode-p 'imenu-list-major-mode))
+
+(defun nano-modeline-imenu-list-mode (&optional icon)
+  (let ((icon (or icon
+                  (plist-get (cdr (assoc 'imenu-list-mode nano-modeline-mode-formats)) :icon)))
+        ;; We take into account the case of narrowed buffers
+        (buffer-name (buffer-name imenu-list--displayed-buffer))
+        (branch      (nano-modeline-vc-branch))
+        (position    (format-mode-line "%l:%c")))
+    (nano-modeline-render icon
+                          buffer-name
+                          "(imenu list)"
+                          "")))
+
+;; ---------------------------------------------------------------------
 (with-eval-after-load 'deft
   (defun nano-modeline-deft-print-header ()
     (force-mode-line-update)
@@ -1049,7 +1074,9 @@ depending on the version of mu4e."
    (plist-get (cdr (assoc 'text-mode nano-modeline-mode-formats)) :icon)))
 
 (defun nano-modeline-default-mode (&optional icon)
-  (let ((buffer-name (nano-modeline-buffer-name))
+  (let ((icon (or icon
+                  (plist-get (cdr (assoc 'text-mode nano-modeline-mode-formats)) :icon)))
+        (buffer-name (nano-modeline-buffer-name))
         (mode-name   (nano-modeline-mode-name))
         (project     (nano-modeline-project))
         (position    (format-mode-line "%l:%2c")))

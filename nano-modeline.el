@@ -4,7 +4,7 @@
 
 ;; Maintainer: Nicolas P. Rougier <Nicolas.Rougier@inria.fr>
 ;; URL: https://github.com/rougier/nano-modeline
-;; Version: 0.7
+;; Version: 0.7.1
 ;; Package-Requires: ((emacs "27.1") (memoize "1.1"))
 ;; Keywords: convenience, mode-line, header-line
 
@@ -47,6 +47,11 @@
 ;; M-x: nano-modeline-mode
 ;;
 ;;; NEWS:
+;;
+;; Version 0.7.1
+;; - Fix a bug with mu4e-dashboard
+;; - Fix a bug in pdf view mode
+;; - Better org-capture mode
 ;;
 ;; Version 0.7
 ;; - Prefix is now an option (none, status or icon)
@@ -222,12 +227,15 @@ This is useful (aesthetically) if the face of prefix uses a different background
     (imenu-list-mode        :mode-p nano-modeline-imenu-list-mode-p
                             :format nano-modeline-imenu-list-mode
                             :icon "") ;; nerd-font / oct-three-bars
+    (org-capture-mode       :mode-p nano-modeline-org-capture-mode-p
+                            :format nano-modeline-org-capture-mode
+                            :on-activate nano-modeline-org-capture-activate
+                            :on-inactivate nano-modeline-org-capture-inactivate
+                            :icon "") ;; nerd-font / oct-calendar
+
     (prog-mode              :mode-p nano-modeline-prog-mode-p
                             :format nano-modeline-prog-mode
                             :icon "") ;; nerd-font / oct-file-code
-    (mu4e-dashboard-mode    :mode-p nano-modeline-mu4e-dashboard-mode-p
-                            :format nano-modeline-mu4e-dashboard-mode
-                            :icon "") ;; nerd-font / oct-inbox
     (mu4e-compose-mode      :mode-p nano-modeline-mu4e-compose-mode-p
                             :format nano-modeline-mu4e-compose-mode
                             :icon "") ;; nerd-font / oct-pencil
@@ -243,6 +251,9 @@ This is useful (aesthetically) if the face of prefix uses a different background
     (mu4e-view-mode         :mode-p nano-modeline-mu4e-view-mode-p
                             :format nano-modeline-mu4e-view-mode
                             :icon "") ;; nerd-font / oct-comment
+    (mu4e-dashboard-mode    :mode-p nano-modeline-mu4e-dashboard-mode-p
+                            :format nano-modeline-mu4e-dashboard-mode
+                            :icon "") ;; nerd-font / oct-inbox
     (messages-mode          :mode-p nano-modeline-messages-mode-p
                             :format nano-modeline-messages-mode
                             :icon "") ;; nerd-font / oct-comment
@@ -297,11 +308,6 @@ This is useful (aesthetically) if the face of prefix uses a different background
                             :icon "") ;; nerd-font / oct-info
     (org-agenda-mode        :mode-p nano-modeline-org-agenda-mode-p
                             :format nano-modeline-org-agenda-mode
-                            :icon "") ;; nerd-font / oct-calendar
-    (org-capture-mode       :mode-p nano-modeline-org-capture-mode-p
-                            :format nano-modeline-org-capture-mode
-                            :on-activate nano-modeline-org-capture-activate
-                            :on-inactivate nano-modeline-org-capture-inactivate
                             :icon "") ;; nerd-font / oct-calendar
     ;; (org-clock-mode         :mode-p nano-modeline-org-clock-mode-p
     ;;                         :format nano-modeline-org-clock-mode
@@ -640,7 +646,7 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
   (nano-modeline-render (plist-get (cdr (assoc 'org-capture-mode nano-modeline-mode-formats)) :icon)
                         "Capture"
                         (concat "(" (org-capture-get :description) ")")
-                        ""))
+                        "Finish: C-c C-c, refile: C-c C-w, cancel: C-c C-k "))
 
 (defun nano-modeline-org-capture-turn-off-header-line ()
   (setq-local header-line-format (default-value 'header-line-format))
@@ -663,26 +669,27 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
         (crumbs ())
         (depth Info-breadcrumbs-depth)
     line)
-    (while  (> depth 0)
-      (setq node (nth 1 (assoc node nodes)))
-      (if node (push node crumbs))
-      (setq depth (1- depth)))
-    (setq crumbs (cons "Top" (if (member (pop crumbs) '(nil "Top"))
-                     crumbs (cons nil crumbs))))
-    (forward-line 1)
-    (dolist (node crumbs)
-      (let ((text
-         (if (not (equal node "Top")) node
-           (format "%s"
-               (if (stringp Info-current-file)
-               (file-name-sans-extension
-                (file-name-nondirectory Info-current-file))
-             Info-current-file)))))
-    (setq line (concat line (if (null line) "" " > ")
-                                (if (null node) "..." text)))))
-    (if (and cnode (not (equal cnode "Top")))
-        (setq line (concat line (if (null line) "" " > ") cnode)))
-    line))
+    (save-excursion
+      (while  (> depth 0)
+        (setq node (nth 1 (assoc node nodes)))
+        (if node (push node crumbs))
+        (setq depth (1- depth)))
+      (setq crumbs (cons "Top" (if (member (pop crumbs) '(nil "Top"))
+                       crumbs (cons nil crumbs))))
+      (forward-line 1)
+      (dolist (node crumbs)
+        (let ((text
+           (if (not (equal node "Top")) node
+             (format "%s"
+                 (if (stringp Info-current-file)
+                 (file-name-sans-extension
+                  (file-name-nondirectory Info-current-file))
+               Info-current-file)))))
+      (setq line (concat line (if (null line) "" " > ")
+                                  (if (null node) "..." text)))))
+      (if (and cnode (not (equal cnode "Top")))
+          (setq line (concat line (if (null line) "" " > ") cnode)))
+      line)))
 
 (defun nano-modeline-info-mode-p ()
   (derived-mode-p 'Info-mode))
@@ -774,9 +781,9 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
 (defun nano-modeline-mu4e-server-props ()
   "Encapsulates the call to the variable mu4e-/~server-props
 depending on the version of mu4e."
-  (if (version< "1.6.10" mu4e-mu-version)
-      mu4e--server-props
-    mu4e~server-props))
+  (if (version< mu4e-mu-version "1.6.0")
+      mu4e~server-props
+    mu4e--server-props))
 
 (defun nano-modeline-mu4e-activate ()
   (with-eval-after-load 'mu4e
@@ -830,7 +837,7 @@ depending on the version of mu4e."
 
 ;; ---------------------------------------------------------------------
 (defun nano-modeline-mu4e-quote (str)
-  (if (version< "1.6.5" mu4e-mu-version)
+  (if (version< mu4e-mu-version "1.8.0")
       (mu4e~quote-for-modeline str)
     (mu4e-quote-for-modeline str)))
 
@@ -936,7 +943,7 @@ depending on the version of mu4e."
     (mode-name   (nano-modeline-mode-name))
     (branch      (nano-modeline-vc-branch))
     (page-number (concat
-              (number-to-string (doc-view-current-page)) "/"
+                  (number-to-string (image-mode-window-get 'page)) "/"
               (or (ignore-errors
                 (number-to-string (doc-view-last-page-number)))
               "???"))))
@@ -954,7 +961,7 @@ depending on the version of mu4e."
     (mode-name   (nano-modeline-mode-name))
     (branch      (nano-modeline-vc-branch))
     (page-number (concat
-              (number-to-string (pdf-view-current-page)) "/"
+              (number-to-string (image-mode-window-get 'page)) "/"
               (or (ignore-errors
                 (number-to-string (pdf-cache-number-of-pages)))
               "???"))))

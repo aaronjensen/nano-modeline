@@ -520,7 +520,10 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
 	     (right-len (length (format-mode-line right))))
     (concat
      left
-     (propertize " " 'face face-modeline 'display `(space :align-to (- right ,right-len)))
+     (propertize " " 'face face-modeline
+                 'display `(space :align-to (- right
+                                               (-1 . right-margin)
+                                               ,right-len)))
      right)))
 
 

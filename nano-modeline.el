@@ -756,7 +756,7 @@ KEY mode name, for reference only. Easier to do lookups and/or replacements.
 
 (defun nano-modeline-vterm-mode ()
   (let* ((buffer-name (format-mode-line "%b"))
-         (prefix (if (string-prefix-p "*vterm" buffer-name)
+         (prefix (if (string-prefix-p "*vterminal:project" buffer-name)
                      "Terminal"
                    buffer-name))
          (directory (nano-modeline-project-relative-name (substring default-directory 0 -1)))
